@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Données, modèles et résultats volumineux
+data/
+datasets/
+checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# Fichiers locaux
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Documents internes
+private/
