@@ -1,21 +1,39 @@
-# Python
+
+# Virtual environments
+.venv/
+venv/
+.env
+.env.*
+
+# Python cache
 __pycache__/
 *.pyc
-.venv/
-.env
+.pytest_cache/
 
-# Données, modèles et résultats volumineux
+# Datasets
 data/
 datasets/
+
+# Model checkpoints
 checkpoints/
+weights/
 *.pth
 *.pt
 *.ckpt
 
-# Fichiers locaux
+# Experimental outputs
+outputs/
+experiments_fedlfi/
+runs/
+
+# Local configuration
 .vscode/
+.idea/
+
+# Private files
+private/
+*.zip
+
+# Operating system
 .DS_Store
 Thumbs.db
-
-# Documents internes
-private/

@@ -1,0 +1,21 @@
+# Deep Learning
+torch
+torchvision
+timm
+
+# Scientific computing
+numpy
+scipy
+scikit-learn
+pandas
+
+# Image processing
+Pillow
+opencv-python
+
+# Visualization
+matplotlib
+tqdm
+
+# Real-time face detection
+ultralytics
