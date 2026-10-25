@@ -1,292 +1,164 @@
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-FIGURES_DIR = PROJECT_ROOT / "docs" / "figures"
-FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+# Output directory
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "docs" / "figures"
+OUTPUT.mkdir(parents=True, exist_ok=True)
+
+# Colors
+BLUE = "#E3F0FF"
+GREEN = "#E5F5E9"
+ORANGE = "#FFF0D9"
+PURPLE = "#EEE7FF"
+GRAY = "#F1F3F5"
 
 
-def add_box(ax, xy, w, h, text, fontsize=10, fc="#F4F6F8", ec="#2F3B52", lw=1.5):
-    x, y = xy
-    box = FancyBboxPatch(
-        (x, y),
-        w,
-        h,
-        boxstyle="round,pad=0.02,rounding_size=0.03",
-        linewidth=lw,
-        edgecolor=ec,
-        facecolor=fc,
+def setup(title, height=11):
+    fig, ax = plt.subplots(figsize=(11, height))
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 12)
+    ax.axis("off")
+
+    ax.set_title(title, fontsize=17, fontweight="bold", pad=18)
+    return fig, ax
+
+
+def box(ax, x, y, w, h, title, detail="", color=BLUE):
+    patch = FancyBboxPatch(
+        (x, y), w, h,
+        boxstyle="round,pad=0.02,rounding_size=0.12",
+        linewidth=1.3,
+        edgecolor="#526277",
+        facecolor=color
     )
-    ax.add_patch(box)
+    ax.add_patch(patch)
+
+    text = title if not detail else f"{title}\n{detail}"
     ax.text(
         x + w / 2,
         y + h / 2,
         text,
         ha="center",
         va="center",
-        fontsize=fontsize,
-        wrap=True,
+        fontsize=11,
+        linespacing=1.4,
+        color="#172033"
     )
-    return box
 
 
-def add_arrow(ax, start, end, text=None, fontsize=9):
-    arrow = FancyArrowPatch(
-        start,
-        end,
+def arrow(ax, x1, y1, x2, y2):
+    patch = FancyArrowPatch(
+        (x1, y1), (x2, y2),
         arrowstyle="-|>",
         mutation_scale=15,
-        linewidth=1.4,
-        color="#333333",
+        linewidth=1.5,
+        color="#526277"
     )
-    ax.add_patch(arrow)
-    if text:
-        mx = (start[0] + end[0]) / 2
-        my = (start[1] + end[1]) / 2
-        ax.text(mx, my + 0.02, text, ha="center", va="bottom", fontsize=fontsize)
-    return arrow
+    ax.add_patch(patch)
 
 
-def save_figure(fig, filename):
-    output_path = FIGURES_DIR / filename
-    fig.savefig(output_path, dpi=300, bbox_inches="tight")
+def save(fig, name):
+    fig.savefig(
+        OUTPUT / f"{name}.png",
+        dpi=220,
+        bbox_inches="tight",
+        facecolor="white"
+    )
+    fig.savefig(
+        OUTPUT / f"{name}.svg",
+        bbox_inches="tight",
+        facecolor="white"
+    )
     plt.close(fig)
-    print(f"Saved: {output_path}")
+    print(f"[OK] {name}.png and {name}.svg")
 
 
-def draw_tinyvit_figure():
-    fig, ax = plt.subplots(figsize=(16, 8))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+def draw_tinyvit():
+    fig, ax = setup("TinyViT RGB-D Gated Fusion", height=12)
 
-    ax.set_title(
-        "TinyViT RGB-D Gated Fusion Architecture",
-        fontsize=16,
-        fontweight="bold",
-        pad=20,
-    )
+    # Two independent input branches
+    box(ax, 0.6, 10.5, 3.8, 0.85,
+        "RGB Image", "(B, 3, 224, 224)", BLUE)
+    box(ax, 5.6, 10.5, 3.8, 0.85,
+        "Depth Map", "(B, 1, 224, 224)", BLUE)
 
-    # Inputs
-    add_box(ax, (0.04, 0.70), 0.13, 0.10, "RGB Input\n(B, 3, 224, 224)", fc="#EAF3FF")
-    add_box(ax, (0.04, 0.28), 0.13, 0.10, "Depth Input\n(B, 1, 224, 224)", fc="#EAF3FF")
+    box(ax, 0.6, 8.9, 3.8, 0.85,
+        "TinyViT RGB Encoder",
+        "(B, 320, 7, 7)", GREEN)
+    box(ax, 5.6, 8.9, 3.8, 0.85,
+        "Repeat 1 to 3 channels",
+        "TinyViT Depth Encoder", GREEN)
 
-    # Depth repeat
-    add_box(ax, (0.22, 0.28), 0.14, 0.10, "Repeat depth\n1 → 3 channels", fc="#FFF4E6")
+    arrow(ax, 2.5, 10.5, 2.5, 9.75)
+    arrow(ax, 7.5, 10.5, 7.5, 9.75)
 
-    # Encoders
-    add_box(
-        ax,
-        (0.42, 0.66),
-        0.16,
-        0.14,
-        "TinyViT RGB Encoder\npretrained=True/False\nnum_classes=0\nglobal_pool=''\nOutput: (B, 320, 7, 7)",
-        fc="#E8F7EC",
-    )
-    add_box(
-        ax,
-        (0.42, 0.24),
-        0.16,
-        0.14,
-        "TinyViT Depth Encoder\npretrained=True/False\nnum_classes=0\nglobal_pool=''\nOutput: (B, 320, 7, 7)",
-        fc="#E8F7EC",
-    )
+    # Both branches enter the fusion stage
+    box(ax, 2.0, 7.15, 6.0, 0.95,
+        "Depth-Gated RGB Features",
+        "Gate = Sigmoid(Conv1x1(Depth)) | RGB x Gate", ORANGE)
 
-    # Gate
-    add_box(
-        ax,
-        (0.64, 0.24),
-        0.14,
-        0.14,
-        "Gate module\nConv 1×1\n320 → 320\nSigmoid\nMask: (B, 320, 7, 7)",
-        fc="#FCECEC",
-    )
+    arrow(ax, 2.5, 8.9, 3.8, 8.1)
+    arrow(ax, 7.5, 8.9, 6.2, 8.1)
 
-    add_box(
-        ax,
-        (0.64, 0.58),
-        0.14,
-        0.14,
-        "Elementwise gating\nGated RGB =\nRGB features × mask\n(B, 320, 7, 7)",
-        fc="#FCECEC",
-    )
+    box(ax, 2.0, 5.4, 6.0, 0.95,
+        "RGB and Depth Tokenization",
+        "49 gated RGB tokens + 49 depth tokens", PURPLE)
 
-    # Tokenization
-    add_box(
-        ax,
-        (0.80, 0.60),
-        0.14,
-        0.10,
-        "Flatten + permute\nGated RGB tokens\n(B, 49, 320)",
-        fc="#F4F0FF",
-    )
-    add_box(
-        ax,
-        (0.80, 0.26),
-        0.14,
-        0.10,
-        "Flatten + permute\nDepth tokens\n(B, 49, 320)",
-        fc="#F4F0FF",
-    )
+    arrow(ax, 5, 7.15, 5, 6.35)
 
-    # Fusion token and transformer
-    add_box(
-        ax,
-        (0.80, 0.82),
-        0.14,
-        0.08,
-        "Learnable fusion token\n(B, 1, 320)",
-        fc="#FFFADB",
-    )
+    box(ax, 2.0, 3.65, 6.0, 0.95,
+        "Token Concatenation",
+        "1 learnable fusion token + 98 tokens = 99 tokens", PURPLE)
 
-    add_box(
-        ax,
-        (0.96, 0.48),
-        0.18,
-        0.18,
-        "Concatenate tokens\n[B, 1+49+49, 320]\n=\nFusion token + RGB tokens + Depth tokens\n→ Transformer Encoder\n1 layer, 8 heads",
-        fontsize=9,
-        fc="#EAF7FA",
-    )
+    arrow(ax, 5, 5.4, 5, 4.6)
 
-    add_box(
-        ax,
-        (1.18, 0.48),
-        0.14,
-        0.18,
-        "Select token 0\nLayerNorm\nLinear(320 → 7)\nOutput logits\n(B, 7)",
-        fc="#EAF3FF",
-    )
+    box(ax, 2.0, 1.9, 6.0, 0.95,
+        "Transformer Encoder",
+        "1 layer | 8 attention heads | 320 features", GREEN)
 
-    # Arrows
-    add_arrow(ax, (0.17, 0.75), (0.42, 0.75))
-    add_arrow(ax, (0.17, 0.33), (0.22, 0.33))
-    add_arrow(ax, (0.36, 0.33), (0.42, 0.33))
-    add_arrow(ax, (0.58, 0.33), (0.64, 0.33))
-    add_arrow(ax, (0.58, 0.73), (0.64, 0.65))
-    add_arrow(ax, (0.78, 0.33), (0.78, 0.62), text="mask")
-    add_arrow(ax, (0.78, 0.65), (0.80, 0.65))
-    add_arrow(ax, (0.58, 0.31), (0.80, 0.31))
-    add_arrow(ax, (0.87, 0.70), (0.96, 0.60))
-    add_arrow(ax, (0.87, 0.31), (0.96, 0.54))
-    add_arrow(ax, (0.87, 0.86), (0.96, 0.62))
-    add_arrow(ax, (1.14, 0.57), (1.18, 0.57))
+    arrow(ax, 5, 3.65, 5, 2.85)
 
-    # Notes
-    ax.text(
-        0.04,
-        0.06,
-        "Code-grounded details: depth is repeated from 1 to 3 channels; both streams use TinyViT-5M; "
-        "depth features generate a gating mask; fusion uses a learnable token and a Transformer encoder.",
-        fontsize=9,
-        ha="left",
-        va="center",
-    )
+    box(ax, 2.0, 0.2, 6.0, 0.9,
+        "Classification Head",
+        "Fusion token -> LayerNorm -> Linear -> 7 logits", BLUE)
 
-    # extend limits because final boxes go beyond x=1
-    ax.set_xlim(0, 1.35)
+    arrow(ax, 5, 1.9, 5, 1.1)
 
-    save_figure(fig, "tinyvit_rgbd_gated_fusion.png")
+    save(fig, "tinyvit_rgbd_gated_fusion")
 
 
-def draw_efficientnet_figure():
-    fig, ax = plt.subplots(figsize=(16, 6))
-    ax.set_xlim(0, 1.28)
-    ax.set_ylim(0, 1)
-    ax.axis("off")
+def draw_efficientnet():
+    fig, ax = setup("EfficientNetV2-S RGB-D + CBAM", height=12)
 
-    ax.set_title(
-        "EfficientNetV2-S RGB-D + CBAM Architecture",
-        fontsize=16,
-        fontweight="bold",
-        pad=20,
-    )
+    stages = [
+        ("RGB-D Input", "(B, 4, 224, 224)", BLUE),
+        ("Input Projection", "Conv 1x1: 4 to 3 channels + ReLU", ORANGE),
+        ("EfficientNetV2-S", "Feature extraction | 1280 channels", GREEN),
+        ("CBAM Attention", "Channel attention -> Spatial attention", PURPLE),
+        ("Convolutional Head", "Conv 1x1: 1280 to 256 + ReLU", ORANGE),
+        ("Global Average Pooling", "AdaptiveAvgPool2d(1) + Flatten", GRAY),
+        ("Classification", "Linear 256 -> 128 -> 7 logits", BLUE),
+    ]
 
-    add_box(ax, (0.04, 0.42), 0.14, 0.16, "RGB-D Input\n(B, 4, 224, 224)", fc="#EAF3FF")
+    y_positions = [10.4, 8.7, 7.0, 5.3, 3.6, 1.9, 0.2]
 
-    add_box(
-        ax,
-        (0.24, 0.40),
-        0.16,
-        0.20,
-        "Projection layer\nConv 1×1\n4 → 3 channels\n+ ReLU",
-        fc="#FFF4E6",
-    )
+    for i, ((title, detail, color), y) in enumerate(
+        zip(stages, y_positions)
+    ):
+        box(ax, 2.0, y, 6.0, 0.95, title, detail, color)
 
-    add_box(
-        ax,
-        (0.46, 0.36),
-        0.18,
-        0.28,
-        "EfficientNetV2-S\nfeature extractor\n(pretrained ImageNet)\nbase_model.features\nOutput channels: 1280",
-        fc="#E8F7EC",
-    )
+        if i < len(stages) - 1:
+            arrow(ax, 5, y, 5, y_positions[i + 1] + 0.95)
 
-    add_box(
-        ax,
-        (0.70, 0.38),
-        0.14,
-        0.24,
-        "CBAM Block\nChannel attention:\nAvgPool + MaxPool + MLP\nthen\nSpatial attention:\nConv on [avg, max]",
-        fontsize=9,
-        fc="#FCECEC",
-    )
-
-    add_box(
-        ax,
-        (0.90, 0.40),
-        0.14,
-        0.20,
-        "Final conv\nConv 1×1\n1280 → 256\n+ ReLU",
-        fc="#F4F0FF",
-    )
-
-    add_box(
-        ax,
-        (1.08, 0.42),
-        0.14,
-        0.16,
-        "AdaptiveAvgPool2d(1)\nFlatten",
-        fc="#FFFADB",
-    )
-
-    add_box(
-        ax,
-        (1.08, 0.14),
-        0.14,
-        0.18,
-        "Classifier\nLinear(256 → 128)\nReLU\nLinear(128 → 7)\nOutput logits",
-        fc="#EAF7FA",
-    )
-
-    add_arrow(ax, (0.18, 0.50), (0.24, 0.50))
-    add_arrow(ax, (0.40, 0.50), (0.46, 0.50))
-    add_arrow(ax, (0.64, 0.50), (0.70, 0.50))
-    add_arrow(ax, (0.84, 0.50), (0.90, 0.50))
-    add_arrow(ax, (1.04, 0.50), (1.08, 0.50))
-    add_arrow(ax, (1.15, 0.42), (1.15, 0.32))
-
-    ax.text(
-        0.04,
-        0.08,
-        "Code-grounded details: the model first projects the 4-channel RGB-D tensor to 3 channels, "
-        "extracts features with EfficientNetV2-S, applies CBAM attention, then classifies 7 emotions.",
-        fontsize=9,
-        ha="left",
-        va="center",
-    )
-
-    save_figure(fig, "efficientnetv2_cbam_rgbd.png")
-
-
-def main():
-    draw_tinyvit_figure()
-    draw_efficientnet_figure()
-    print("Architecture figures generated successfully.")
+    save(fig, "efficientnetv2_cbam_rgbd")
 
 
 if __name__ == "__main__":
-    main()
+    draw_tinyvit()
+    draw_efficientnet()
+    print("Both architecture diagrams generated successfully.")
