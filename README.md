@@ -183,8 +183,6 @@ git clone https://github.com/EBL-svg/rgbd-facial-expression-recognition.git
 cd rgbd-facial-expression-recognition
 ```
 
-The repository is currently private and requires authorized GitHub access.
-
 ### 2. Create a virtual environment
 
 Recommended environment: Python 3.11.
