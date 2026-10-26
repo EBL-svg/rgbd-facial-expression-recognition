@@ -339,6 +339,63 @@ Its execution requires:
 
 The real-time inference pipeline is separate from the TinyViT training pipeline and requires its own validation.
 
+## Experimental Results
+
+The project included a multimodal pretraining stage followed by fine-tuning on real RGB-D facial expression data.
+
+### Pretraining Performance
+
+During multimodal pretraining, the training loss decreased steadily, indicating stable optimization.
+
+![Pretraining Loss History](docs/results/pretraining_loss_history.png)
+
+*Figure 3. Training loss history during multimodal pretraining.*
+
+The training accuracy increased progressively, while the validation accuracy reached a lower but stable plateau.
+
+![Pretraining Accuracy History](docs/results/pretraining_accuracy_history.png)
+
+*Figure 4. Training and validation accuracy during multimodal pretraining.*
+
+Observed trends:
+- Training accuracy increased from about **69.6%** to **84.65%**
+- Validation accuracy stabilized around **56.5%**
+- Training loss decreased from about **0.84** to **0.40**
+
+These results suggest that the model learned meaningful multimodal facial representations during pretraining, although a gap remained between training and validation performance.
+
+### Fine-Tuning Results on Real Data
+
+Fine-tuning on the FED-LFI dataset led to significantly improved subject-independent performance.
+
+According to the project report:
+- Best validation accuracy on **Fold 10**: **88.52%**
+- Reported average inter-subject performance: **about 89%**
+
+The normalized confusion matrix below illustrates the classification performance after fine-tuning.
+
+![Normalized Confusion Matrix - Fold 10](docs/results/fold10_confusion_matrix.png)
+
+*Figure 5. Normalized confusion matrix after fine-tuning on FED-LFI (Fold 10).*
+
+Main observations:
+- **Disgust** and **Neutrality** were classified very accurately
+- **Anger**, **Happiness**, and **Surprise** also achieved strong performance
+- **Fear** showed more confusion with nearby facial expressions
+- Some confusion remained between **Sadness**, **Neutrality**, and **Disgust**
+
+These results support the relevance of RGB-D multimodal learning for facial expression recognition, especially when adapting from large-scale pretraining to more realistic data.
+
+### Remarks
+
+The plots above were obtained during the original academic project experiments.
+
+Full reproduction of these exact results requires access to:
+- the corresponding datasets,
+- the trained checkpoints,
+- the experimental training configuration,
+- and the appropriate hardware/software environment.
+
 ## Limitations
 
 - Restricted and third-party datasets are not distributed.
